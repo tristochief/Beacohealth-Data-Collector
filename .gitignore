@@ -1,0 +1,9 @@
+KinectStreams.csproj
+app.config
+app.manifest
+.vs/*
+bin/*
+obj/*
+Properties/*
+Data/*
+Beacohealth-Data-Collector/* 

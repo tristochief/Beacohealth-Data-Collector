@@ -1,0 +1,41 @@
+﻿<Window x:Class="KinectStreams.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Kinect | Color, Depth, Infrared" Height="1080" Width="1920" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="113*"/>
+            <ColumnDefinition Width="365*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.ColumnSpan="2">
+            <Button Width="70" Height="70" Name="play" BorderBrush="White" Background="White" Click="Play_Click">
+                <Image Source="Resources/play.png" ></Image>
+            </Button>
+            <Button Width="70" Height="70" Name="pause" Background="#FFE0E0E0" Click="Pause_Click">
+                <Image Source="Resources/pause.png"/>
+            </Button>
+        </StackPanel>
+        <Image Name="camera" Width="720" Height="480" Grid.Column="1" Margin="143.852,284,596,285"/>
+        <Canvas Name="canvas" Grid.ColumnSpan="2" />
+        <Grid Style="{StaticResource GridButtonsStyle}" RenderTransformOrigin="0.5,0.494" Name="CntrlGrid" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"></RowDefinition>
+                <RowDefinition Height="1*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <StackPanel Style="{StaticResource StackPanelButtonsStyle}" Grid.Column="0">
+                <Button Content="Contact" Style="{StaticResource ButtonStyle}" Click="Contact_Click" Name="btn_Contact"/>
+                <Button Content="Wash Hands" Style="{StaticResource ButtonStyle}" Click="Wash_Click" Name="btn_Wash"/>
+                <Button Content="Neither" Style="{StaticResource ButtonStyle}" Click="None_Click" Name="btn_Neither"/>
+            </StackPanel>
+            <StackPanel Style="{StaticResource StackPanelButtonsStyle}" Grid.Column="1">
+                <Button Content="Color" Style="{StaticResource ButtonStyle}" Click="Color_Click" />
+                <Button Content="Depth" Style="{StaticResource ButtonStyle}" Click="Depth_Click" />
+                <Button Content="Infrared" Style="{StaticResource ButtonStyle}" Click="Infrared_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
