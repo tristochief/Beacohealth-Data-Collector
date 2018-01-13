@@ -1,4 +1,5 @@
 ﻿using Microsoft.Kinect;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,12 +10,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+using Button =  System.Windows.Controls.Button;
 namespace KinectStreams
 {
     /// <summary>
@@ -29,6 +32,7 @@ namespace KinectStreams
         Mode _mode = Mode.Depth;
         LabelMode _labelMode = LabelMode.NONE;
         Boolean isPlaying = false;
+        Boolean fileLocation = false;
 
         KinectSensor _sensor;
         MultiSourceFrameReader _reader;
@@ -47,10 +51,14 @@ namespace KinectStreams
          **/
         // Images being saved in Release folders, e.g. Debug/Data/... 
 
-        static string Data = System.IO.Directory.GetCurrentDirectory() + @"\Data";
-        static string pathToRgbFolder = Data + @"\RGB";
-        static string pathToDepthFolder = Data + @"\Depth";
-        static string pathToInfraredFolder = Data + @"\Infrared";
+        static string data = System.IO.Directory.GetCurrentDirectory() + @"\Data";
+        static string pathToRgbFolder = data + @"\RGB";
+        static string pathToDepthFolder = data + @"\Depth";
+        static string pathToInfraredFolder = data + @"\Infrared";
+
+        static int rgbSesh = 0;
+        static int depthSesh = 0;
+        static int infraSesh = 0;
 
         #endregion
 
@@ -102,7 +110,7 @@ namespace KinectStreams
                 {
                     if (_mode == Mode.Color)
                     {
-                        camera.Source = frame.ToBitmap(pathToRgbFolder, _labelMode, isPlaying);
+                        camera.Source = frame.ToBitmap(pathToRgbFolder, _labelMode, isPlaying, rgbSesh);
                     }
                 }
             }
@@ -114,7 +122,7 @@ namespace KinectStreams
                 {
                     if (_mode == Mode.Depth)
                     {
-                        camera.Source = frame.ToBitmap(pathToDepthFolder, _labelMode, isPlaying);
+                        camera.Source = frame.ToBitmap(pathToDepthFolder, _labelMode, isPlaying, depthSesh);
                     }
                 }
             }
@@ -126,7 +134,7 @@ namespace KinectStreams
                 {
                     if (_mode == Mode.Infrared)
                     {
-                        camera.Source = frame.ToBitmap(pathToInfraredFolder, _labelMode, isPlaying);
+                        camera.Source = frame.ToBitmap(pathToInfraredFolder, _labelMode, isPlaying, infraSesh);
                     }
                 }
             }
@@ -212,6 +220,14 @@ namespace KinectStreams
             button.Background = Brushes.LightGreen;
         }
         private void Play_Click(object sender, RoutedEventArgs e) {
+            if(!fileLocation)
+            {
+                if(!savePrompt())
+                {
+                    System.Windows.Forms.MessageBox.Show("Save directory not specified.", "Error Title", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
+            }
             isPlaying = true;
 
             ResetButtonColors(new Button[] { pause });
@@ -227,6 +243,28 @@ namespace KinectStreams
 
             Button button = sender as Button;
             button.Background = Brushes.DarkRed;
+
+            switch(_mode)
+            {
+                case Mode.Color:
+                    rgbSesh++;
+                    break;
+                case Mode.Depth:
+                    depthSesh++;
+                    break;
+                case Mode.Infrared:
+                    infraSesh++;
+                    break;
+                
+            }
+
+        }
+        #endregion
+
+        #region Save dialog region
+        private void Save_Click(object sender, System.EventArgs e)
+        {
+            savePrompt();
         }
         #endregion
 
@@ -239,9 +277,89 @@ namespace KinectStreams
             }
         }
         #endregion
+
+        private Boolean savePrompt()
+        {
+            using (var fbd = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                System.Windows.Forms.DialogResult result = fbd.ShowDialog();
+
+                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    data = fbd.SelectedPath;
+                    pathToRgbFolder = data + @"\RGB";
+                    pathToDepthFolder = data + @"\Depth";
+                    pathToInfraredFolder = data + @"\Infrared";
+                }
+                else
+                {
+                    System.Windows.Forms.DialogResult dr = System.Windows.Forms.MessageBox.Show("Do you want to save files in defualt folder?",
+                      "Save File", MessageBoxButtons.YesNo);
+                    switch (dr)
+                    {
+                        case System.Windows.Forms.DialogResult.Yes: break;
+                        case System.Windows.Forms.DialogResult.No: return fileLocation;
+                    }
+                }
+
+                fileLocation = true;
+            }
+
+            // Find the last session number 
+            if(Directory.Exists(pathToRgbFolder))
+            {
+                var rgb = Directory.GetDirectories(pathToRgbFolder).OrderByDescending(filename => filename);
+                if (!MissingExtensions.IsNullOrEmpty(rgb)) { }
+                    rgbSesh = extractNum(rgb.First()) + 1;
+                
+            }
+            if (Directory.Exists(pathToDepthFolder))
+            {
+                var depth = Directory.GetDirectories(pathToDepthFolder).OrderByDescending(filename => filename);
+                if (!MissingExtensions.IsNullOrEmpty(depth))
+                    depthSesh = extractNum(depth.First()) + 1;
+            }
+
+            if(Directory.Exists(pathToInfraredFolder))
+            {
+                var infra = Directory.GetDirectories(pathToInfraredFolder).OrderByDescending(filename => filename);
+                if (!MissingExtensions.IsNullOrEmpty(infra))
+                    infraSesh = extractNum(infra.First()) + 1;
+            }
+
+            return fileLocation;
+        }
+
+        public int extractNum(string input)
+        {
+            var stack = new Stack<char>();
+
+            for (var i = input.Length - 1; i >= 0; i--)
+            {
+                if (!char.IsNumber(input[i]))
+                {
+                    break;
+                }
+
+                stack.Push(input[i]);
+            }
+
+            var result = new string(stack.ToArray());
+
+            return Convert.ToInt32(result);
+        }
+
     }
 
-    
+    // Generic class for extension
+    public static class MissingExtensions
+    {
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
+        {
+            return enumerable == null || !enumerable.Any();
+        }
+    }
+
     public enum Mode
     {
         Color,

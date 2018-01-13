@@ -21,6 +21,8 @@ namespace KinectStreams
         static int depthImageCount = 0;
         static int infraredImageCount = 0;
 
+
+
         static int frameWidth = -1;
         static int frameHeight = -1;
 
@@ -29,7 +31,7 @@ namespace KinectStreams
 
         #region Camera
 
-        public static ImageSource ToBitmap(this ColorFrame frame, string pathToRgbFolder, LabelMode label, Boolean saveImage)
+        public static ImageSource ToBitmap(this ColorFrame frame, string pathToRgbFolder, LabelMode label, Boolean saveImage, int session)
         {
             int width = frameWidth != -1 ? frameWidth : frame.FrameDescription.Width;
             int height = frameHeight != -1 ? frameHeight : frame.FrameDescription.Height;
@@ -50,14 +52,14 @@ namespace KinectStreams
 
             BitmapSource image = BitmapSource.Create(outputFrameWidth, outputFrameHeight, 96, 96, format, null, pixels, stride);
             if (saveImage) {
-                SaveImage(pathToRgbFolder + "\\" + LabelToFilePath(label) + "\\" + rgbImageCount, image);
+                SaveImage(pathToRgbFolder + "\\" + session + "\\" + LabelToFilePath(label) + "\\" + rgbImageCount, image);
                 rgbImageCount++;
             }
 
             return image;
         }
 
-        public static ImageSource ToBitmap(this DepthFrame frame, string pathToDepthFolder, LabelMode label, Boolean saveImage)
+        public static ImageSource ToBitmap(this DepthFrame frame, string pathToDepthFolder, LabelMode label, Boolean saveImage, int session)
         {
             int width = frameWidth != -1 ? frameWidth : frame.FrameDescription.Width;
             int height = frameHeight != -1 ? frameHeight : frame.FrameDescription.Height;
@@ -88,16 +90,15 @@ namespace KinectStreams
             int stride = width * format.BitsPerPixel / 8;
 
             BitmapSource image = BitmapSource.Create(width, height, 96, 96, format, null, pixels, stride);
-            Console.WriteLine("saveImage: {0}", saveImage);
             if (saveImage) {
-                SaveImage(pathToDepthFolder + "\\" + LabelToFilePath(label) + "\\" + depthImageCount, image);
+                SaveImage(pathToDepthFolder + "\\" + session + "\\" + LabelToFilePath(label) + "\\" + depthImageCount, image);
                 depthImageCount++;
             }
 
             return image;
         }
 
-        public static ImageSource ToBitmap(this InfraredFrame frame, string pathToInfraredFolder, LabelMode label, Boolean saveImage)
+        public static ImageSource ToBitmap(this InfraredFrame frame, string pathToInfraredFolder, LabelMode label, Boolean saveImage, int session)
         {
             int width = frameWidth != -1 ? frameWidth : frame.FrameDescription.Width;
             int height = frameHeight != -1 ? frameHeight : frame.FrameDescription.Height;
@@ -126,7 +127,7 @@ namespace KinectStreams
 
             BitmapSource image = BitmapSource.Create(width, height, 96, 96, format, null, pixels, stride);
             if (saveImage) {
-                SaveImage(pathToInfraredFolder + "\\" + LabelToFilePath(label) + "\\" + infraredImageCount, image);
+                SaveImage(pathToInfraredFolder + "\\" + session + "\\" + LabelToFilePath(label) + "\\" + infraredImageCount, image);
                 infraredImageCount++;
             }
 
@@ -255,6 +256,8 @@ namespace KinectStreams
         public static void SaveImage(string filePath, BitmapSource image)
         {
             filePath += ".png";
+
+            // Create the directory if it doesn't exist
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(filePath));
 
             using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -280,5 +283,7 @@ namespace KinectStreams
                 return "None";
             }
         }
+
+        
     }
 }
