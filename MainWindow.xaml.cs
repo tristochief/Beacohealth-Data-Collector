@@ -309,7 +309,7 @@ namespace KinectStreams
             if(Directory.Exists(pathToRgbFolder))
             {
                 var rgb = Directory.GetDirectories(pathToRgbFolder).OrderByDescending(filename => filename);
-                if (!MissingExtensions.IsNullOrEmpty(rgb)) { }
+                if (!MissingExtensions.IsNullOrEmpty(rgb))
                     rgbSesh = extractNum(rgb.First()) + 1;
                 
             }
