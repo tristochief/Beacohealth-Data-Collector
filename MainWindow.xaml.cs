@@ -170,18 +170,23 @@ namespace KinectStreams
 
         private void Color_Click(object sender, RoutedEventArgs e)
         {
-            
             _mode = Mode.Color;
+            ResetButtonColors(new Button[] { btn_Depth, btn_Infra });
+            btn_Color.Background = Brushes.LightSkyBlue;
         }
 
         private void Depth_Click(object sender, RoutedEventArgs e)
         {
             _mode = Mode.Depth;
+            ResetButtonColors(new Button[] { btn_Color, btn_Infra });
+            btn_Depth.Background = Brushes.LightSkyBlue;
         }
 
         private void Infrared_Click(object sender, RoutedEventArgs e)
         {
             _mode = Mode.Infrared;
+            ResetButtonColors(new Button[] { btn_Color, btn_Depth });
+            btn_Infra.Background = Brushes.LightSkyBlue;
         }
 
         private void Body_Click(object sender, RoutedEventArgs e)
@@ -244,6 +249,27 @@ namespace KinectStreams
             ResetButtonColors(new Button[] { btn_Wash, btn_Contact });
             btn_Neither.Background = Brushes.LightGreen;
         }
+
+        public void Color_Method(Object sender, ExecutedRoutedEventArgs e)
+        {
+            _mode = Mode.Color;
+            ResetButtonColors(new Button[] { btn_Depth, btn_Infra });
+            btn_Color.Background = Brushes.LightSkyBlue;
+        }
+
+        public void Depth_Method(Object sender, ExecutedRoutedEventArgs e)
+        {
+            _mode = Mode.Depth;
+            ResetButtonColors(new Button[] { btn_Color, btn_Infra });
+            btn_Depth.Background = Brushes.LightSkyBlue;
+        }
+
+        public void Infra_Method(Object sender, ExecutedRoutedEventArgs e)
+        {
+            _mode = Mode.Infrared;
+            ResetButtonColors(new Button[] { btn_Color, btn_Depth });
+            btn_Infra.Background = Brushes.LightSkyBlue;
+        }
         #endregion
 
 
@@ -292,7 +318,6 @@ namespace KinectStreams
         #region Save dialog region
         private void Save_Click(object sender, System.EventArgs e)
         {
-            Extensions.changeResolution(@"C:\Nahian\Beacohealth-Data-Collector\Beacohealth-Data-Collector\Test\RGB\1\None\14.png");
             savePrompt();
         }
         #endregion
