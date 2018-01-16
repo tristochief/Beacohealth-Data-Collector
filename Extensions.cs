@@ -275,17 +275,18 @@ namespace KinectStreams
             // Change Resolution here
             if (filePath.Contains("RGB"))
             {
-                Bitmap Bmp = new Bitmap(filePath);
-                float tempWidth = Bmp.Width;
-                float tempHeight = Bmp.Height;
+                //Bitmap Bmp = new Bitmap(filePath);
+                //float tempWidth = Bmp.Width;
+                //float tempHeight = Bmp.Height;
 
-                int width = (int)(tempWidth * percentage / 100);
-                int height = (int)(tempHeight * percentage / 100);
-                Bitmap Bmp2 = new Bitmap(Bmp, width , height);
-                Bmp.Dispose();
-                File.Delete(filePath);
-                Bmp2.Save(filePath);
-                Bmp2.Dispose();
+                //int width = (int)(tempWidth * percentage / 100);
+                //int height = (int)(tempHeight * percentage / 100);
+                //Bitmap Bmp2 = new Bitmap(Bmp, width , height);
+                //Bmp.Dispose();
+                //File.Delete(filePath);
+                //Bmp2.Save(filePath);
+                //Bmp2.Dispose();
+                changeResolution(filePath);
             }
         }
 
@@ -305,6 +306,76 @@ namespace KinectStreams
             }
         }
 
-        
+        static Bitmap LoadImage(string filePath)
+        {
+            return (Bitmap)Bitmap.FromFile(filePath); // Original Kinect RGB size 1280X1024
+        }
+
+        public static void changeResolution(string filePath)
+        {
+            using (var absentRectangleImage = LoadImage(filePath))
+            {
+                absentRectangleImage.SetResolution(24, 24);
+                using (var currentTile = new Bitmap(1476, 1080, System.Drawing.Imaging.PixelFormat.Format24bppRgb))
+                {
+                    currentTile.SetResolution(absentRectangleImage.HorizontalResolution, absentRectangleImage.VerticalResolution);
+
+                    using (Graphics currentTileGraphics = Graphics.FromImage(currentTile))
+                    {
+                        currentTileGraphics.Clear(System.Drawing.Color.Black);
+                        var absentRectangleArea = new System.Drawing.Rectangle(240, 0, 1476, 1080); // (top left x-coordinate, top left y-coordinate, width, height)
+                        // Quick maths: x = (1900-512)/2; y=(1080-424)/2;  -- This doesn't work :( 
+                        currentTileGraphics.DrawImage(absentRectangleImage, 0, 0, absentRectangleArea, GraphicsUnit.Pixel);
+                    }
+
+                    // Delete the file before saving it
+                    // File.Delete(filePath);
+                    absentRectangleImage.Dispose();
+                    if (File.Exists(filePath))
+                        File.Delete(filePath);
+
+                    Bitmap dstImage = ResizeImage(currentTile, 512, 424);
+                    dstImage.Save(filePath);
+                    //currentTile.Save(filePath);
+                    currentTile.Dispose();
+                    dstImage.Dispose();
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// Resize the image to the specified width and height.
+        /// </summary>
+        /// <param name="image">The image to resize.</param>
+        /// <param name="width">The width to resize to.</param>
+        /// <param name="height">The height to resize to.</param>
+        /// <returns>The resized image.</returns>
+        public static Bitmap ResizeImage(System.Drawing.Image image, int width, int height)
+        {
+            var destRect = new System.Drawing.Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new System.Drawing.Imaging.ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(System.Drawing.Drawing2D.WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+
+            return destImage;
+        }
+
+
     }
 }

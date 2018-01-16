@@ -26,7 +26,7 @@ namespace KinectStreams
     public partial class MainWindow : Window
     {
 
-
+        
         #region Members
 
         Mode _mode = Mode.Depth;
@@ -76,7 +76,7 @@ namespace KinectStreams
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             _sensor = KinectSensor.GetDefault();
-
+            
             if (_sensor != null)
             {
                 _sensor.Open();
@@ -219,6 +219,25 @@ namespace KinectStreams
             Button button = sender as Button;
             button.Background = Brushes.LightGreen;
         }
+
+        #region Key Binding
+        public void Contact_Method(Object sender, ExecutedRoutedEventArgs e)
+        {
+            Contact_Click(sender, e);
+        }
+
+        public void Wash_Method(Object sender, ExecutedRoutedEventArgs e)
+        {
+            Wash_Click(sender, e);
+        }
+
+        public void Neither_Method(Object sender, ExecutedRoutedEventArgs e)
+        {
+            None_Click(sender, e);
+        }
+        #endregion
+
+
         private void Play_Click(object sender, RoutedEventArgs e) {
             if(!fileLocation)
             {
@@ -264,6 +283,7 @@ namespace KinectStreams
         #region Save dialog region
         private void Save_Click(object sender, System.EventArgs e)
         {
+            Extensions.changeResolution(@"C:\Nahian\Beacohealth-Data-Collector\Beacohealth-Data-Collector\Test\RGB\1\None\14.png");
             savePrompt();
         }
         #endregion
@@ -349,6 +369,10 @@ namespace KinectStreams
             return Convert.ToInt32(result);
         }
 
+        private void CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+
+        }
     }
 
     // Generic class for extension
