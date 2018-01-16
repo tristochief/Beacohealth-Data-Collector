@@ -223,17 +223,26 @@ namespace KinectStreams
         #region Key Binding
         public void Contact_Method(Object sender, ExecutedRoutedEventArgs e)
         {
-            Contact_Click(sender, e);
+            _labelMode = LabelMode.CONTACT;
+
+            ResetButtonColors(new Button[] { btn_Wash, btn_Neither });
+            btn_Contact.Background = Brushes.LightGreen;
         }
 
         public void Wash_Method(Object sender, ExecutedRoutedEventArgs e)
         {
-            Wash_Click(sender, e);
+            _labelMode = LabelMode.WASH;
+
+            ResetButtonColors(new Button[] { btn_Contact, btn_Neither });
+            btn_Wash.Background = Brushes.LightGreen;
         }
 
         public void Neither_Method(Object sender, ExecutedRoutedEventArgs e)
         {
-            None_Click(sender, e);
+            _labelMode = LabelMode.NONE;
+
+            ResetButtonColors(new Button[] { btn_Wash, btn_Contact });
+            btn_Neither.Background = Brushes.LightGreen;
         }
         #endregion
 

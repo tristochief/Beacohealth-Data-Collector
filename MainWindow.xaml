@@ -49,9 +49,9 @@
                 <RowDefinition Height="1*"></RowDefinition>
             </Grid.RowDefinitions>
             <StackPanel Style="{StaticResource StackPanelButtonsStyle}" Grid.Column="0">
-                <Button Content="Contact" Style="{StaticResource ButtonStyle}" Click="Contact_Click" Name="btn_Contact" Command="{StaticResource Contact}"/>
-                <Button Content="Wash Hands" Style="{StaticResource ButtonStyle}" Click="Wash_Click" Name="btn_Wash" Command="{StaticResource Wash Hands}"/>
-                <Button Content="Neither" Style="{StaticResource ButtonStyle}" Click="None_Click" Name="btn_Neither" Command="{StaticResource Neither}"/>
+                <Button Content="Contact" Style="{StaticResource ButtonStyle}" Click="Contact_Click" x:Name="btn_Contact" />
+                <Button Content="Wash Hands" Style="{StaticResource ButtonStyle}" Click="Wash_Click" x:Name="btn_Wash" />
+                <Button Content="Neither" Style="{StaticResource ButtonStyle}" Click="None_Click" x:Name="btn_Neither" />
             </StackPanel>
             <StackPanel Style="{StaticResource StackPanelButtonsStyle}" Grid.Column="1">
                 <Button Content="Choose Directory" Name="save" Style="{StaticResource ButtonStyle}" Click="Save_Click" Width="112"/>
