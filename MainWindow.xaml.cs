@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -35,7 +36,8 @@ namespace KinectStreams
         Boolean fileLocation = false;
 
         KinectSensor _sensor;
-        MultiSourceFrameReader _reader;
+        ColorFrameReader _reader;
+        DepthFrameReader _reader2;
         IList<Body> _bodies;
 
         bool _displayBody = false;
@@ -81,91 +83,101 @@ namespace KinectStreams
             {
                 _sensor.Open();
 
-                _reader = _sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Infrared | FrameSourceTypes.Body);
-                _reader.MultiSourceFrameArrived += Reader_MultiSourceFrameArrived;
+                _reader = _sensor.ColorFrameSource.OpenReader();
+
+                _reader2 = _sensor.DepthFrameSource.OpenReader();
+
+                _reader.FrameArrived += Reader_ColorFrameArrived;
+                _reader2.FrameArrived += Reader_DepthFrameArrived;
             }
         }
 
         private void Window_Closed(object sender, EventArgs e)
         {
             if (_reader != null)
-            {
                 _reader.Dispose();
-            }
+
+            if (_reader2 != null)
+                _reader2.Dispose();
 
             if (_sensor != null)
-            {
                 _sensor.Close();
-            }
         }
 
-        void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
+        void Reader_DepthFrameArrived(object sender, DepthFrameArrivedEventArgs e)
         {
-            var reference = e.FrameReference.AcquireFrame();
+            if (_mode == Mode.Both || _mode == Mode.Depth)
+                using (var depthFrame = e.FrameReference.AcquireFrame())
+                    if (depthFrame != null)
+                        camera.Source = depthFrame.ToBitmap(pathToDepthFolder, _labelMode, isPlaying, depthSesh);
+        }
+        void Reader_ColorFrameArrived(object sender, ColorFrameArrivedEventArgs e)
+        {
 
             // Color
-            using (var frame = reference.ColorFrameReference.AcquireFrame())
+            if (_mode == Mode.Color || _mode == Mode.Both)
             {
-                if (frame != null)
-                {
-                    if (_mode == Mode.Color)
+                using (var frame = e.FrameReference.AcquireFrame())
+                    if (frame != null)
                     {
-                        camera.Source = frame.ToBitmap(pathToRgbFolder, _labelMode, isPlaying, rgbSesh);
+                        var img = frame.ToBitmap(pathToRgbFolder, _labelMode, isPlaying, rgbSesh);
+                        if(_mode == Mode.Color)
+                            camera.Source = img;
                     }
-                }
             }
 
-            // Depth
-            using (var frame = reference.DepthFrameReference.AcquireFrame())
-            {
-                if (frame != null)
-                {
-                    if (_mode == Mode.Depth)
-                    {
-                        camera.Source = frame.ToBitmap(pathToDepthFolder, _labelMode, isPlaying, depthSesh);
-                    }
-                }
-            }
+            //// Depth
+            //if (_mode == Mode.Depth) { 
+            //    using (var frame = reference.DepthFrameReference.AcquireFrame())
+            //        if (frame != null)
+            //            camera.Source = frame.ToBitmap(pathToDepthFolder, _labelMode, isPlaying, depthSesh);
+            //}
+            //// Both
 
-            // Infrared
-            using (var frame = reference.InfraredFrameReference.AcquireFrame())
-            {
-                if (frame != null)
-                {
-                    if (_mode == Mode.Infrared)
-                    {
-                        camera.Source = frame.ToBitmap(pathToInfraredFolder, _labelMode, isPlaying, infraSesh);
-                    }
-                }
-            }
+            //if (_mode == Mode.Both)
+            //    using (var colourFrame = reference.ColorFrameReference.AcquireFrame())
+            //        if(colourFrame!=null)
+            //            colourFrame.ToBitmap(pathToRgbFolder, _labelMode, isPlaying, rgbSesh);
 
-            // Body
-            using (var frame = reference.BodyFrameReference.AcquireFrame())
-            {
-                if (frame != null)
-                {
-                    canvas.Children.Clear();
+            //// Infrared
+            //using (var frame = reference.InfraredFrameReference.AcquireFrame())
+            //{
+            //    if (frame != null)
+            //    {
+            //        if (_mode == Mode.Infrared)
+            //        {
+            //            camera.Source = frame.ToBitmap(pathToInfraredFolder, _labelMode, isPlaying, infraSesh);
+            //        }
+            //    }
+            //}
+            
+            //// Body
+            //using (var frame = reference.BodyFrameReference.AcquireFrame())
+            //{
+            //    if (frame != null)
+            //    {
+            //        canvas.Children.Clear();
 
-                    _bodies = new Body[frame.BodyFrameSource.BodyCount];
+            //        _bodies = new Body[frame.BodyFrameSource.BodyCount];
 
-                    frame.GetAndRefreshBodyData(_bodies);
+            //        frame.GetAndRefreshBodyData(_bodies);
 
-                    foreach (var body in _bodies)
-                    {
-                        if (body != null)
-                        {
-                            if (body.IsTracked)
-                            {
-                                // Draw skeleton.
-                                if (_displayBody)
-                                {
-                                    canvas.DrawSkeleton(body);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            //        foreach (var body in _bodies)
+            //        {
+            //            if (body != null)
+            //            {
+            //                if (body.IsTracked)
+            //                {
+            //                    // Draw skeleton.
+            //                    if (_displayBody)
+            //                    {
+            //                        canvas.DrawSkeleton(body);
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         private void Color_Click(object sender, RoutedEventArgs e)
@@ -184,7 +196,7 @@ namespace KinectStreams
 
         private void Infrared_Click(object sender, RoutedEventArgs e)
         {
-            _mode = Mode.Infrared;
+            _mode = Mode.Both;
             ResetButtonColors(new Button[] { btn_Color, btn_Depth });
             btn_Infra.Background = Brushes.LightSkyBlue;
         }
@@ -266,7 +278,7 @@ namespace KinectStreams
 
         public void Infra_Method(Object sender, ExecutedRoutedEventArgs e)
         {
-            _mode = Mode.Infrared;
+            _mode = Mode.Both;
             ResetButtonColors(new Button[] { btn_Color, btn_Depth });
             btn_Infra.Background = Brushes.LightSkyBlue;
         }
@@ -278,7 +290,7 @@ namespace KinectStreams
             {
                 if(!savePrompt())
                 {
-                    System.Windows.Forms.MessageBox.Show("Save directory not specified.", "Error Title", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    System.Windows.Forms.MessageBox.Show("Save directory not specified.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
                 }
             }
@@ -293,12 +305,23 @@ namespace KinectStreams
         private void Pause_Click(object sender, RoutedEventArgs e) {
             isPlaying = false;
 
-            ResetButtonColors(new Button[] { play});
+            ResetButtonColors(new Button[] { play });
 
             Button button = sender as Button;
             button.Background = Brushes.DarkRed;
 
-            switch(_mode)
+            // Spawn a thread here to deal with the rgb session which was just created
+
+            // Create Thread Instance here
+            if (_mode == Mode.Color)
+            {
+                int temp = rgbSesh;
+                Thread InstanceCaller = new Thread(() => RGBFormatClass.changeResolution(pathToRgbFolder, temp, _labelMode));
+                InstanceCaller.Start();
+            }
+            
+            // Incrmenet session variable
+            switch (_mode)
             {
                 case Mode.Color:
                     rgbSesh++;
@@ -311,6 +334,7 @@ namespace KinectStreams
                     break;
                 
             }
+            
 
         }
         #endregion
@@ -403,10 +427,6 @@ namespace KinectStreams
             return Convert.ToInt32(result);
         }
 
-        private void CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
-
-        }
     }
 
     // Generic class for extension
@@ -418,11 +438,13 @@ namespace KinectStreams
         }
     }
 
+
     public enum Mode
     {
         Color,
         Depth,
-        Infrared
+        Infrared,
+        Both
     }
 
     

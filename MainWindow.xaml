@@ -71,7 +71,7 @@
             <StackPanel Style="{StaticResource StackPanelButtonsStyle}" Grid.Column="2">
                 <Button Content="Color" Style="{StaticResource ButtonStyle}" Command ="{StaticResource Color}" Click="Color_Click" x:Name="btn_Color"/>
                 <Button Content="Depth" Style="{StaticResource ButtonStyle}" Command ="{StaticResource Depth}" Click="Depth_Click" x:Name="btn_Depth" />
-                <Button Content="Infrared" Style="{StaticResource ButtonStyle}" Command ="{StaticResource Infra}" Click="Infrared_Click" x:Name="btn_Infra"/>
+                <Button Content="Both" Style="{StaticResource ButtonStyle}" Command ="{StaticResource Infra}" Click="Infrared_Click" x:Name="btn_Infra"/>
             </StackPanel>
         </Grid>
     </Grid>

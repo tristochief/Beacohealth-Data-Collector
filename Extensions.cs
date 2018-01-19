@@ -27,11 +27,6 @@ namespace KinectStreams
         static int frameWidth = -1;
         static int frameHeight = -1;
 
-        static int outputFrameWidth = 720;
-        static int outputFrameHeight = 480;
-
-        private static double percentage = 20;
-
         #region Camera
 
         public static ImageSource ToBitmap(this ColorFrame frame, string pathToRgbFolder, LabelMode label, Boolean saveImage, int session)
@@ -39,7 +34,6 @@ namespace KinectStreams
             int width = frameWidth != -1 ? frameWidth : frame.FrameDescription.Width;
             int height = frameHeight != -1 ? frameHeight : frame.FrameDescription.Height;
 
-            // Changing resolution is as simple as changing aspect
 
             PixelFormat format = PixelFormats.Bgr32;
 
@@ -57,6 +51,9 @@ namespace KinectStreams
             int stride = (int) width * format.BitsPerPixel / 8;
 
             BitmapSource image = BitmapSource.Create( width , height , 96, 96, format, null, pixels, stride);
+
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.LowQuality);
+
             if (saveImage) {
                 SaveImage(pathToRgbFolder + "\\" + session + "\\" + LabelToFilePath(label) + "\\" + rgbImageCount, image);
                 rgbImageCount++;
@@ -272,25 +269,25 @@ namespace KinectStreams
                 encoder.Frames.Add(BitmapFrame.Create(image));
                 encoder.Save(fileStream);
             }
-            // Change Resolution here
-            if (filePath.Contains("RGB"))
-            {
-                //Bitmap Bmp = new Bitmap(filePath);
-                //float tempWidth = Bmp.Width;
-                //float tempHeight = Bmp.Height;
+            // Change Resolution here !!! Do this after saving the image and create a thread to do it
+            //if (filePath.Contains("RGB"))
+            //{
+            //    //Bitmap Bmp = new Bitmap(filePath);
+            //    //float tempWidth = Bmp.Width;
+            //    //float tempHeight = Bmp.Height;
 
-                //int width = (int)(tempWidth * percentage / 100);
-                //int height = (int)(tempHeight * percentage / 100);
-                //Bitmap Bmp2 = new Bitmap(Bmp, width , height);
-                //Bmp.Dispose();
-                //File.Delete(filePath);
-                //Bmp2.Save(filePath);
-                //Bmp2.Dispose();
-                changeResolution(filePath);
-            }
+            //    //int width = (int)(tempWidth * percentage / 100);
+            //    //int height = (int)(tempHeight * percentage / 100);
+            //    //Bitmap Bmp2 = new Bitmap(Bmp, width , height);
+            //    //Bmp.Dispose();
+            //    //File.Delete(filePath);
+            //    //Bmp2.Save(filePath);
+            //    //Bmp2.Dispose();
+            //    changeResolution(filePath);
+            //}
         }
 
-        private static string LabelToFilePath(LabelMode label)
+        public static string LabelToFilePath(LabelMode label)
         {
             if(label == LabelMode.WASH)
             {
@@ -303,6 +300,30 @@ namespace KinectStreams
             else
             {
                 return "None";
+            }
+        }
+
+       
+
+
+    }
+
+    // This class will handle changing the RGB format in a different thread
+    public class RGBFormatClass
+    {
+        public static void changeResolution(string pathToRGBfolder, int session, LabelMode label)
+        {
+            var filepath = pathToRGBfolder + "\\" + session + "\\" + Extensions.LabelToFilePath(label);
+
+            if (!Directory.Exists(filepath))
+            {
+                System.Windows.Forms.MessageBox.Show("RGB directory not found!.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation);
+                return;
+            }
+
+            var filenames = Directory.GetFiles(filepath);
+            foreach (var file in filenames) {
+                changeResolution(file);
             }
         }
 
@@ -375,7 +396,5 @@ namespace KinectStreams
 
             return destImage;
         }
-
-
     }
 }
